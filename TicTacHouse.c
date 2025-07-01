@@ -90,6 +90,39 @@ void printBoard(Row* board, int dimensions)
 
 }
 
+int checkIllegalMove(int x, int y, int dimensions, char player, Row* gameBoard)
+{
+	//init rowPtr to first row
+	Row* rowPtr = gameBoard;
+
+	//adjust definition of y since coordinates are modeled backwards
+	y = dimensions - y;
+
+	//keep moving down until correct row is reached
+	for(int i = 0; i < y; i++)
+		rowPtr = rowPtr->down;
+	
+	//init cellPtr to first cell in row
+	Cell* cellPtr = rowPtr->head;
+
+	//keep moving to the right until correct column is reached
+	for(int j = 1; j < x; j++)
+		cellPtr = cellPtr->right;
+
+	//if the contents of the cell is anything except a '*' then it is occupied
+	if(cellPtr->val != '*')
+	{
+		printf("Cell is occupied!\n");
+		return 1;
+	}
+
+	//fall through, means position is valid
+	//EDIT APPROACH- get rid of modify board fucntion, can do here instead
+	cellPtr->val = player;
+
+	return 0;
+}		
+
 
 int main() 
 {
@@ -139,12 +172,10 @@ int main()
 			printf("Placing symbol at coordinates (%d,%d)\n", xCoord, yCoord);
 
 
-		}while(1);
-		
+		}while(checkIllegalMove(xCoord,yCoord, dimensions, player, gameBoard));
 
 
-
-
+		printBoard(gameBoard, dimensions);
 
 
 
