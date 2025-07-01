@@ -213,7 +213,9 @@ int main()
 
 
 		
-
+		
+		//update turns counter
+		turns++;
 
 
 
