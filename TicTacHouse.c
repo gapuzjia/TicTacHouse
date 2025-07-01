@@ -123,12 +123,58 @@ int checkIllegalMove(int x, int y, int dimensions, char player, Row* gameBoard)
 	return 0;
 }
 
+int checkWalls(int xAnchor, int yAnchor, int dimensions, char player, Row* gameBoard)
+{
+        //init/declare rowPtr and cellPtr
+        Row* rowPtr = gameBoard;
+        Cell* cellPtr;
+
+        //-----check top of walls
+        //move rowPtr to 2 above yAnchor
+        for(int i = 0; i < dimensions - yAnchor - 2; i++)
+                rowPtr = rowPtr->down;
+
+        //init cellPtr
+        cellPtr = rowPtr->head;
+
+        //move cellPtr to xAnchor
+        for(int i = 0; i < xAnchor; i++)
+                cellPtr = cellPtr->right;
+
+        //top of walls are not in place, house is not made
+        if(cellPtr->val != player || cellPtr->right->right->val != player)
+                return 0;
+
+        //------now check middle brick
+        //move rowPtr down
+        rowPtr = rowPtr->down;
+
+        //re-initialize cellPtr
+        cellPtr = rowPtr->head;
+
+        //move cellPtr to xAnchor
+        for(int i = 0; i < xAnchor; i++)
+                cellPtr = cellPtr->right;
+
+        //top of walls are not in place, house is not made
+        if(cellPtr->val != player || cellPtr->right->right->val != player)
+                return 0;
+
+
+        //code falls through, means walls are in place and correct
+        return 1;
+
+}
+
 int checkWinner(char player, int dimensions, Row* gameBoard)
 {
+	//declare tracking variables
+	int yAnchor = dimensions - 5;
+	int xAnchor;
 	
-	//init current rowPtr to the 4th row, base can only start at that row
+	//init current rowPtr to the 5th row, base can only start at that row
 	Row* rowPtr = gameBoard;
-	for(int i = 0; i < 3; i++)
+	for(int i = 0; i < 5; i++)
 		rowPtr = rowPtr->down;
 
 	while(rowPtr->down)
@@ -138,17 +184,27 @@ int checkWinner(char player, int dimensions, Row* gameBoard)
 		cellPtr = cellPtr->right;
 
 		//traverse all rows for 3 of the symbol in a row
-		//dimensions - 4 takes care of both the initial offset (base cannot start in first column) and prevents looking two to the right being null 
-		for(int i = 0; i < dimensions - 4; i++)
+		//dimensions - 2 prevents looking two to the right being null 
+		for(int i = 1; i < dimensions - 2; i++)
 		{
+			xAnchor = i;
+			
+			//executes if a 3 in a row was found
 			if(cellPtr->val == player && cellPtr->val == cellPtr->right->val && cellPtr->val == cellPtr->right->right->val)
-				 printf("Found 3 in a row\n");
+			{
+				printf("found 3 in a row\n");
+				if(checkWalls(xAnchor, yAnchor, dimensions, player, gameBoard))
+					printf("base and walls exist!");
+
+			}
 			
 			//move to next pointer
 			cellPtr = cellPtr->right;
 		}
 		
-		rowPtr = rowPtr->down;	
+		//move rowPtr and update anchor tracker
+		rowPtr = rowPtr->down;
+		yAnchor--;
 	}
 
 	return 0;
