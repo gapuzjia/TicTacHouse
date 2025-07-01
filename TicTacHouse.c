@@ -121,7 +121,38 @@ int checkIllegalMove(int x, int y, int dimensions, char player, Row* gameBoard)
 	cellPtr->val = player;
 
 	return 0;
-}		
+}
+
+int checkWinner(char player, int dimensions, Row* gameBoard)
+{
+	
+	//init current rowPtr to the 4th row, base can only start at that row
+	Row* rowPtr = gameBoard;
+	for(int i = 0; i < 3; i++)
+		rowPtr = rowPtr->down;
+
+	while(rowPtr->down)
+	{
+		//init current cellPtr to one in, base can only start there
+		Cell* cellPtr = rowPtr->head;
+		cellPtr = cellPtr->right;
+
+		//traverse all rows for 3 of the symbol in a row
+		//dimensions - 4 takes care of both the initial offset (base cannot start in first column) and prevents looking two to the right being null 
+		for(int i = 0; i < dimensions - 4; i++)
+		{
+			if(cellPtr->val == player && cellPtr->val == cellPtr->right->val && cellPtr->val == cellPtr->right->right->val)
+				 printf("Found 3 in a row\n");
+			
+			//move to next pointer
+			cellPtr = cellPtr->right;
+		}
+		
+		rowPtr = rowPtr->down;	
+	}
+
+	return 0;
+}
 
 
 int main() 
@@ -150,7 +181,6 @@ int main()
 	Row* gameBoard = createBoard(dimensions, dimensions);
 
 	printf("Generating board with dimensions %dx%d:\n", dimensions, dimensions);
-	printBoard(gameBoard, dimensions);
 
 
 	//start gameplay
@@ -160,7 +190,10 @@ int main()
 		//determine who's turn it is
 		player = playerSymbols[(turns - 1) % NUM_PLAYERS];
 		
-		
+		//printgameBoard
+		printBoard(gameBoard, dimensions);
+
+
 		//get player's move
 		do
 		{
@@ -174,12 +207,12 @@ int main()
 
 		}while(checkIllegalMove(xCoord,yCoord, dimensions, player, gameBoard));
 
+		
+		//check if a player won
+		isPlaying = !checkWinner(player, dimensions, gameBoard);
 
-		printBoard(gameBoard, dimensions);
 
-
-
-
+		
 
 
 
