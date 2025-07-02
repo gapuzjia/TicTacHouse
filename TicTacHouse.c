@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//node representing each cell 
+//node representing each cell, now four-way connected 
 typedef struct Cell{
 
 	char val;
@@ -120,100 +120,64 @@ int checkIllegalMove(int x, int y, int dimensions, char player, Cell* gameBoard)
     return 0;
 }
 
-// int checkWalls(int xAnchor, int yAnchor, int dimensions, char player, Row* gameBoard)
-// {
-//         //init/declare rowPtr and cellPtr
-//         Row* rowPtr = gameBoard;
-//         Cell* cellPtr;
-// 
-//         //-----check top of walls
-//         //move rowPtr to 2 above yAnchor
-//         for(int i = 0; i < dimensions - yAnchor - 2; i++)
-//                 rowPtr = rowPtr->down;
-// 
-//         //init cellPtr
-//         cellPtr = rowPtr->head;
-// 
-//         //move cellPtr to xAnchor
-//         for(int i = 0; i < xAnchor; i++)
-//                 cellPtr = cellPtr->right;
-// 
-//         //top of walls are not in place, house is not made
-//         if(cellPtr->val != player || cellPtr->right->right->val != player)
-//                 return 0;
-// 
-//         //------now check middle brick
-//         //move rowPtr down
-//         rowPtr = rowPtr->down;
-// 
-//         //re-initialize cellPtr
-//         cellPtr = rowPtr->head;
-// 
-//         //move cellPtr to xAnchor
-//         for(int i = 0; i < xAnchor; i++)
-//                 cellPtr = cellPtr->right;
-// 
-//         //top of walls are not in place, house is not made
-//         if(cellPtr->val != player || cellPtr->right->right->val != player)
-//                 return 0;
-// 
-// 
-//         //code falls through, means walls are in place and correct
-//         return 1;
-// 
-// }
-// 
-// int checkWinner(char player, int dimensions, Row* gameBoard)
-// {
-// 	//declare tracking variables
-// 	int yAnchor = dimensions - 5;
-// 	int xAnchor;
-// 	
-// 	//init current rowPtr to the 5th row, base can only start at that row
-// 	Row* rowPtr = gameBoard;
-// 	for(int i = 0; i < 5; i++)
-// 		rowPtr = rowPtr->down;
-// 
-// 	while(rowPtr->down)
-// 	{
-// 		//init current cellPtr to one in, base can only start there
-// 		Cell* cellPtr = rowPtr->head;
-// 		cellPtr = cellPtr->right;
-// 
-// 		//traverse all rows for 3 of the symbol in a row
-// 		//dimensions - 2 prevents looking two to the right being null 
-// 		for(int i = 1; i < dimensions - 2; i++)
-// 		{
-// 			xAnchor = i;
-// 			
-// 			//executes if a 3 in a row was found
-// 			if(cellPtr->val == player && cellPtr->val == cellPtr->right->val && cellPtr->val == cellPtr->right->right->val)
-// 			{
-// 				printf("found 3 in a row\n");
-// 				if(checkWalls(xAnchor, yAnchor, dimensions, player, gameBoard))
-// 					printf("base and walls exist!");
-// 
-// 			}
-// 			
-// 			//move to next pointer
-// 			cellPtr = cellPtr->right;
-// 		}
-// 		
-// 		//move rowPtr and update anchor tracker
-// 		rowPtr = rowPtr->down;
-// 		yAnchor--;
-// 	}
-// 
-// 	return 0;
-// }
-// 
-// 
+int checkWinner(char player, int dimensions, Cell* gameBoard)
+{
+	//declare and init top left cell
+	Cell* anchor;
+	Cell* rowPtr = gameBoard;
+	Cell* topRightWall;
+	Cell* topLeftWall;
+	
+	//traverse entire gameBoard
+        for (int i = 0; i < dimensions; i++)
+        {
+
+                anchor = rowPtr;
+
+                for (int j = 1; j <= dimensions; j++)
+                { 
+			//checks if roof is present
+                        if(anchor->val == player &&
+                        (anchor->left->down && (anchor->left->down->val == player)) && (anchor->right->down && (anchor->right->down->val == player)) &&
+                        (anchor->left->left->down && (anchor->left->left->val == player)) &&  (anchor->right->right->down && (anchor->right->right->val == player)))
+                        {
+				//track the top of both walls
+                                topLeftWall = anchor->left->down->down->down;
+                                topRightWall = anchor->right->down->down->down;
+
+				//check if walls and floor is present
+                                if(topLeftWall && topRightWall &&
+                                (topLeftWall->val == player && topRightWall->val == player) &&
+                                (topLeftWall->down->val == player && topRightWall->down->val == player) &&
+                                (topLeftWall->down->down->val == player && topRightWall->down->down->val == player) &&
+                                (topLeftWall->down->down->right->val))
+				{
+					printf("Player %c WINS!!!\n", player);
+					return 1;
+				}
+			}
+			
+			//move anchor to the right	
+			anchor = anchor->right;
+                }
+
+		//move row pointer down
+                rowPtr = rowPtr->down;
+        }
+
+	//code falls through, means no winner yet
+	return 0;
+}
+ 
+ 
 int main() 
 {
 	
 	//delcare all variables
 	const int NUM_PLAYERS = 4;
 	char playerSymbols[4] = {'X','O','W','B'};
+
+
 
 	//TO CALCULATE: NUMBER OF MAX MOVES THAT WILL RESULT IN A DRAW GAME--- ADD THIS CONDT LATER
 	//const int MAX_TURNS = 
@@ -262,7 +226,7 @@ int main()
 
 		
 		//check if a player won
-		//isPlaying = !checkWinner(player, dimensions, gameBoard);
+		isPlaying = !checkWinner(player, dimensions, gameBoard);
 
 
 		
