@@ -5,212 +5,209 @@
 typedef struct Cell{
 
 	char val;
+	struct Cell* up;
+	struct Cell* down;
+	struct Cell* left;
 	struct Cell* right;
 
 }Cell;
 
-//node representing each row
-typedef struct Row{
-
-	Cell* head;
-	struct Row* down; 
-
-}Row;
-
 //create a board with defined dimensions
-Row* createBoard(int rows, int cols)
+Cell* createBoard(int rows, int cols)
 {
-	Row* top = NULL;
-	Row* prevRow = NULL;
+	Cell* topLeft = NULL;
+    	Cell* prevRowStart = NULL;
 
-	for (int i = 0; i < rows; i++)
+    	for (int i = 0; i < rows; i++) 
 	{
-		Row* newRow = malloc(sizeof(Row));
-		newRow->down = NULL;
+        	Cell* rowStart = NULL;
+        	Cell* prev = NULL;
+        	Cell* upper = prevRowStart;
 
-		Cell* rowHead = NULL;
-		Cell* prevCell = NULL;
-
-        	for (int j = 0; j < cols; j++)
+        	for (int j = 0; j < cols; j++) 
 		{
             		Cell* newCell = malloc(sizeof(Cell));
             		newCell->val = '*';
-            		newCell->right = NULL;
+            		newCell->up = newCell->down = newCell->left = newCell->right = NULL;
 
-            		if (!rowHead)
-                		rowHead = newCell;
-            		else
-                		prevCell->right = newCell;
+            		if (!rowStart)
+                		rowStart = newCell;
 
-            		prevCell = newCell;
+            		if (prev) 
+			{
+                		prev->right = newCell;
+                		newCell->left = prev;
+            		}
+
+            		if (upper) 
+			{
+                		newCell->up = upper;
+                		upper->down = newCell;
+                		upper = upper->right;
+            		}
+
+            		prev = newCell;
         	}
 
-        	newRow->head = rowHead;
+        	if (!topLeft)
+            		topLeft = rowStart;
 
-        	if (!top)
-            		top = newRow;
-        	else
-            		prevRow->down = newRow;
-
-        	prevRow = newRow;
+        	prevRowStart = rowStart;
     	}
 
-	return top;
+    	return topLeft;
 }
 
 //print board
-void printBoard(Row* board, int dimensions) 
+void printBoard(Cell* gameBoard, int dimensions) 
 {
-	Row* rowPtr = board;
+	//init top left cell
+ 	Cell* rowPtr = gameBoard;
 
-    int y = 0;
-    while (rowPtr && y < dimensions) 
-    {
-        //print y-axis labels (set backwards to mimic Q1 on Cartesian plane
-        printf("%2d ", (dimensions - y));
 
-        Cell* cellPtr = rowPtr->head;
-        while (cellPtr) {
-            printf(" %c ", cellPtr->val);
-            cellPtr = cellPtr->right;
-        }
-
-        printf("\n");
-        rowPtr = rowPtr->down;
-        y++;
-    
-    }
-
-	
-    //print x axis labels and buffer
-    printf("   ");
-    for(int i = 1; i <= dimensions; i++)
-        printf("%2d ", i);
-    printf("\n");
-
-}
-
-int checkIllegalMove(int x, int y, int dimensions, char player, Row* gameBoard)
-{
-	//init rowPtr to first row
-	Row* rowPtr = gameBoard;
-
-	//adjust definition of y since coordinates are modeled backwards
-	y = dimensions - y;
-
-	//keep moving down until correct row is reached
-	for(int i = 0; i < y; i++)
-		rowPtr = rowPtr->down;
-	
-	//init cellPtr to first cell in row
-	Cell* cellPtr = rowPtr->head;
-
-	//keep moving to the right until correct column is reached
-	for(int j = 1; j < x; j++)
-		cellPtr = cellPtr->right;
-
-	//if the contents of the cell is anything except a '*' then it is occupied
-	if(cellPtr->val != '*')
+    	for (int i = 0; i < dimensions; i++) 
 	{
-		printf("Cell is occupied!\n");
-		return 1;
-	}
+        	//adjust to go backwards to mimic cartesian coordinates
+        	printf("%2d ", dimensions - i);
 
-	//fall through, means position is valid
-	//EDIT APPROACH- get rid of modify board fucntion, can do here instead
-	cellPtr->val = player;
+        	Cell* cellPtr = rowPtr;
 
-	return 0;
-}
-
-int checkWalls(int xAnchor, int yAnchor, int dimensions, char player, Row* gameBoard)
-{
-        //init/declare rowPtr and cellPtr
-        Row* rowPtr = gameBoard;
-        Cell* cellPtr;
-
-        //-----check top of walls
-        //move rowPtr to 2 above yAnchor
-        for(int i = 0; i < dimensions - yAnchor - 2; i++)
-                rowPtr = rowPtr->down;
-
-        //init cellPtr
-        cellPtr = rowPtr->head;
-
-        //move cellPtr to xAnchor
-        for(int i = 0; i < xAnchor; i++)
-                cellPtr = cellPtr->right;
-
-        //top of walls are not in place, house is not made
-        if(cellPtr->val != player || cellPtr->right->right->val != player)
-                return 0;
-
-        //------now check middle brick
-        //move rowPtr down
-        rowPtr = rowPtr->down;
-
-        //re-initialize cellPtr
-        cellPtr = rowPtr->head;
-
-        //move cellPtr to xAnchor
-        for(int i = 0; i < xAnchor; i++)
-                cellPtr = cellPtr->right;
-
-        //top of walls are not in place, house is not made
-        if(cellPtr->val != player || cellPtr->right->right->val != player)
-                return 0;
-
-
-        //code falls through, means walls are in place and correct
-        return 1;
-
-}
-
-int checkWinner(char player, int dimensions, Row* gameBoard)
-{
-	//declare tracking variables
-	int yAnchor = dimensions - 5;
-	int xAnchor;
-	
-	//init current rowPtr to the 5th row, base can only start at that row
-	Row* rowPtr = gameBoard;
-	for(int i = 0; i < 5; i++)
-		rowPtr = rowPtr->down;
-
-	while(rowPtr->down)
-	{
-		//init current cellPtr to one in, base can only start there
-		Cell* cellPtr = rowPtr->head;
-		cellPtr = cellPtr->right;
-
-		//traverse all rows for 3 of the symbol in a row
-		//dimensions - 2 prevents looking two to the right being null 
-		for(int i = 1; i < dimensions - 2; i++)
+        	for (int j = 1; j <= dimensions; j++) 
 		{
-			xAnchor = i;
-			
-			//executes if a 3 in a row was found
-			if(cellPtr->val == player && cellPtr->val == cellPtr->right->val && cellPtr->val == cellPtr->right->right->val)
-			{
-				printf("found 3 in a row\n");
-				if(checkWalls(xAnchor, yAnchor, dimensions, player, gameBoard))
-					printf("base and walls exist!");
+            		printf(" %c ", cellPtr->val);
+            		cellPtr = cellPtr->right;
+        	}
 
-			}
-			
-			//move to next pointer
-			cellPtr = cellPtr->right;
-		}
-		
-		//move rowPtr and update anchor tracker
-		rowPtr = rowPtr->down;
-		yAnchor--;
-	}
+        	printf("\n");
+        	rowPtr = rowPtr->down;
+    	}
 
-	return 0;
+    	//print labels for x-axis
+    	printf("   ");
+
+    	for (int i = 1; i <= dimensions; i++)
+        	printf("%2d ", i);
+    
+    	printf("\n");
 }
 
+int checkIllegalMove(int x, int y, int dimensions, char player, Cell* gameBoard)
+{
 
+    	//declare and init top left cell
+    	Cell* cellPtr = gameBoard;
+	
+	//adjust y coordinate to mimic cartesian coordiantes
+    	y = dimensions - y;
+
+	//traverse downward
+    	for (int i = 0; i < y; i++)
+        	cellPtr = cellPtr->down;
+    	
+	//traverse to the right
+	for (int i = 1; i < x; i++)
+        	cellPtr = cellPtr->right;
+
+    	//check if position is occupied
+    	if (cellPtr->val != '*') 
+	{
+        	printf("Invalid position, please choose another cell!\n");
+        	return 1;
+    	}
+
+    //modify position if legal
+    cellPtr->val = player;
+    return 0;
+}
+
+// int checkWalls(int xAnchor, int yAnchor, int dimensions, char player, Row* gameBoard)
+// {
+//         //init/declare rowPtr and cellPtr
+//         Row* rowPtr = gameBoard;
+//         Cell* cellPtr;
+// 
+//         //-----check top of walls
+//         //move rowPtr to 2 above yAnchor
+//         for(int i = 0; i < dimensions - yAnchor - 2; i++)
+//                 rowPtr = rowPtr->down;
+// 
+//         //init cellPtr
+//         cellPtr = rowPtr->head;
+// 
+//         //move cellPtr to xAnchor
+//         for(int i = 0; i < xAnchor; i++)
+//                 cellPtr = cellPtr->right;
+// 
+//         //top of walls are not in place, house is not made
+//         if(cellPtr->val != player || cellPtr->right->right->val != player)
+//                 return 0;
+// 
+//         //------now check middle brick
+//         //move rowPtr down
+//         rowPtr = rowPtr->down;
+// 
+//         //re-initialize cellPtr
+//         cellPtr = rowPtr->head;
+// 
+//         //move cellPtr to xAnchor
+//         for(int i = 0; i < xAnchor; i++)
+//                 cellPtr = cellPtr->right;
+// 
+//         //top of walls are not in place, house is not made
+//         if(cellPtr->val != player || cellPtr->right->right->val != player)
+//                 return 0;
+// 
+// 
+//         //code falls through, means walls are in place and correct
+//         return 1;
+// 
+// }
+// 
+// int checkWinner(char player, int dimensions, Row* gameBoard)
+// {
+// 	//declare tracking variables
+// 	int yAnchor = dimensions - 5;
+// 	int xAnchor;
+// 	
+// 	//init current rowPtr to the 5th row, base can only start at that row
+// 	Row* rowPtr = gameBoard;
+// 	for(int i = 0; i < 5; i++)
+// 		rowPtr = rowPtr->down;
+// 
+// 	while(rowPtr->down)
+// 	{
+// 		//init current cellPtr to one in, base can only start there
+// 		Cell* cellPtr = rowPtr->head;
+// 		cellPtr = cellPtr->right;
+// 
+// 		//traverse all rows for 3 of the symbol in a row
+// 		//dimensions - 2 prevents looking two to the right being null 
+// 		for(int i = 1; i < dimensions - 2; i++)
+// 		{
+// 			xAnchor = i;
+// 			
+// 			//executes if a 3 in a row was found
+// 			if(cellPtr->val == player && cellPtr->val == cellPtr->right->val && cellPtr->val == cellPtr->right->right->val)
+// 			{
+// 				printf("found 3 in a row\n");
+// 				if(checkWalls(xAnchor, yAnchor, dimensions, player, gameBoard))
+// 					printf("base and walls exist!");
+// 
+// 			}
+// 			
+// 			//move to next pointer
+// 			cellPtr = cellPtr->right;
+// 		}
+// 		
+// 		//move rowPtr and update anchor tracker
+// 		rowPtr = rowPtr->down;
+// 		yAnchor--;
+// 	}
+// 
+// 	return 0;
+// }
+// 
+// 
 int main() 
 {
 	
@@ -234,7 +231,7 @@ int main()
 	scanf("%d", &dimensions);
 	
 	//create instance of the gameBoard
-	Row* gameBoard = createBoard(dimensions, dimensions);
+	Cell* gameBoard = createBoard(dimensions, dimensions);
 
 	printf("Generating board with dimensions %dx%d:\n", dimensions, dimensions);
 
@@ -265,7 +262,7 @@ int main()
 
 		
 		//check if a player won
-		isPlaying = !checkWinner(player, dimensions, gameBoard);
+		//isPlaying = !checkWinner(player, dimensions, gameBoard);
 
 
 		
