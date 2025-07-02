@@ -120,7 +120,7 @@ int checkIllegalMove(int x, int y, int dimensions, char player, Cell* gameBoard)
     return 0;
 }
 
-int checkWinner(char player, int dimensions, Cell* gameBoard)
+int checkWinner(char player, int dimensions, Cell* gameBoard, int WIN_DIMENSIONS)
 {
 	//declare and init top left cell
 	Cell* anchor;
@@ -129,16 +129,17 @@ int checkWinner(char player, int dimensions, Cell* gameBoard)
 	Cell* topLeftWall;
 	
 	//traverse entire gameBoard
-        for (int i = 0; i < dimensions; i++)
+        for (int i = 0; i < dimensions - WIN_DIMENSIONS; i++)
         {
 
-                anchor = rowPtr;
+		//move anchor to the right two spaces since house can only start there 
+                anchor = rowPtr->right->right;
 
-                for (int j = 1; j <= dimensions; j++)
+                for (int j = 1; j <= dimensions && anchor->right; j++)
                 { 
 			//checks if roof is present
                         if(anchor->val == player &&
-                        (anchor->left->down && anchor->right->down && anchor->left->left->down && anchor->right->right->down) &&
+                        (anchor->down->left && anchor->down->right && anchor->down->down->left && anchor->right->right->down) &&
 			(anchor->left->down->val == player && anchor->right->down->val == player) &&
 			(anchor->left->left->down->down->val == player && anchor->right->right->down->down->val == player))		 
                         {
@@ -179,6 +180,7 @@ int main()
 	//delcare all variables
 	const int NUM_PLAYERS = 4;
 	char playerSymbols[4] = {'X','O','W','B'};
+	const int WIN_DIMENSIONS = 5;
 
 
 
@@ -229,7 +231,7 @@ int main()
 
 		
 		//check if a player won
-		isPlaying = !checkWinner(player, dimensions, gameBoard);
+		isPlaying = !checkWinner(player, dimensions, gameBoard, WIN_DIMENSIONS);
 
 
 		
