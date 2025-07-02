@@ -138,8 +138,9 @@ int checkWinner(char player, int dimensions, Cell* gameBoard)
                 { 
 			//checks if roof is present
                         if(anchor->val == player &&
-                        (anchor->left->down && (anchor->left->down->val == player)) && (anchor->right->down && (anchor->right->down->val == player)) &&
-                        (anchor->left->left->down && (anchor->left->left->val == player)) &&  (anchor->right->right->down && (anchor->right->right->val == player)))
+                        (anchor->left->down && anchor->right->down && anchor->left->left->down && anchor->right->right->down) &&
+			(anchor->left->down->val == player && anchor->right->down->val == player) &&
+			(anchor->left->left->down->down->val == player && anchor->right->right->down->down->val == player))		 
                         {
 				//track the top of both walls
                                 topLeftWall = anchor->left->down->down->down;
@@ -147,10 +148,12 @@ int checkWinner(char player, int dimensions, Cell* gameBoard)
 
 				//check if walls and floor is present
                                 if(topLeftWall && topRightWall &&
-                                (topLeftWall->val == player && topRightWall->val == player) &&
-                                (topLeftWall->down->val == player && topRightWall->down->val == player) &&
-                                (topLeftWall->down->down->val == player && topRightWall->down->down->val == player) &&
-                                (topLeftWall->down->down->right->val))
+				(topLeftWall->down->val && topRightWall->down->val) &&
+				(topLeftWall->down->down->val && topRightWall->down->down->val) &&
+				(topLeftWall->val == player && topRightWall->val == player) &&
+				(topLeftWall->down->val == player && topRightWall->down->val == player) &&
+				(topLeftWall->down->down->val == player && topRightWall->down->down->val == player) &&
+				topLeftWall->down->down->right->val == player)
 				{
 					printf("Player %c WINS!!!\n", player);
 					return 1;
